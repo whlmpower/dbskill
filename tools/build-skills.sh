@@ -19,21 +19,23 @@ trap 'rm -rf "$INNER_DIR"' EXIT
 # skill 名 → 分组目录
 group_for() {
   case "$1" in
-    dbs)
+    dbs|dbs-update)
       echo "必装入口" ;;
-    dbs-diagnosis|dbs-deconstruct|dbs-goal|dbs-good-question|dbs-slowisfast|dbs-action)
+    dbs-diagnosis|dbs-standard-answer|dbs-deconstruct|dbs-goal|dbs-good-question|dbs-slowisfast|dbs-action)
       echo "看商业问题" ;;
-    dbs-content|dbs-benchmark|dbs-hook|dbs-xhs-title|dbs-ai-check)
+    dbs-content|dbs-benchmark|dbs-hook|dbs-xhs-title|dbs-ai-check|dbs-wechat-html|dbs-spread|dbs-resonate|dbs-script-flow)
       echo "做内容" ;;
     dbs-content-system)
       echo "进阶-内容工程" ;;
+    dbs-knowledge)
+      echo "进阶-知识库" ;;
     dbs-chatroom|dbs-chatroom-austrian)
       echo "进阶-聊天室" ;;
     dbs-save|dbs-restore|dbs-report)
       echo "进阶-状态管理" ;;
     dbs-decision)
       echo "进阶-决策系统" ;;
-    dbs-agent-migration)
+    dbs-agent-migration|dbs-bridge|dbs-skill-cleaner)
       echo "进阶-Agent基建" ;;
     dbs-learning)
       echo "进阶-学习" ;;
@@ -79,6 +81,11 @@ build_one() {
     cp -R "$skill_dir/tools/." "$stage_dir/tools/"
   fi
 
+  if [ -d "$skill_dir/scripts" ]; then
+    mkdir -p "$stage_dir/scripts"
+    cp -R "$skill_dir/scripts/." "$stage_dir/scripts/"
+  fi
+
   refs="$(grep -Eo '知识库/[^`,。 、)]*\.md' "$skill_dir/SKILL.md" || true)"
   if [ -n "$refs" ]; then
     while IFS= read -r ref; do
@@ -109,7 +116,15 @@ PY
 }
 
 for skill_md in "$ROOT_DIR"/skills/*/SKILL.md; do
-  build_one "$(dirname "$skill_md")"
+  skill_dir="$(dirname "$skill_md")"
+  skill_name="$(basename "$skill_dir")"
+
+  if [[ "$skill_name" == *beta* ]]; then
+    echo "skipped local-only beta skill: $skill_name"
+    continue
+  fi
+
+  build_one "$skill_dir"
 done
 
 cat > "$INNER_DIR/README.md" <<EOF
@@ -120,10 +135,12 @@ Trae Solo 一个 zip 装一个 skill。本压缩包按使用场景分了几个�
 ## 必装入口
 
 - **dbs** — 主入口，根据你的问题自动路由到合适的诊断 skill。其他 skill 都依赖它，先装这个。
+- **dbs-update** — 更新 dbskill。安装后直接对 Agent 说「更新 dbskill」。
 
 ## 看商业问题
 
 - **dbs-diagnosis** — 商业模式诊断（问诊 + 体检两种模式）
+- **dbs-standard-answer** — 历史同构与标准答案研究（从成功、失败和反例中提炼带条件的解法）
 - **dbs-deconstruct** — 概念拆解（维特根斯坦 + 奥派经济学）
 - **dbs-goal** — 目标清晰化（把「我想做个人 IP」这种愿望语法审计成可检查的交付物）
 - **dbs-good-question** — 好问题生成器（把模糊问题改成 Agent 可推理、可验证的问题说明书）
@@ -137,10 +154,17 @@ Trae Solo 一个 zip 装一个 skill。本压缩包按使用场景分了几个�
 - **dbs-hook** — 短视频开头优化
 - **dbs-xhs-title** — 小红书标题公式（75 个验证过的爆款公式）
 - **dbs-ai-check** — AI 写作特征识别
+- **dbs-wechat-html** — 微信公众号 HTML 生成（15 种经典风格，支持预览和全量生成）
+- **dbs-spread** — 传播心理解码
+- **dbs-resonate** — 文稿共鸣诊断
 
 ## 进阶-内容工程
 
 - **dbs-content-system** — 内容结构化系统（把本地大量内容资产搭成可继续生长的内容工程）
+
+## 进阶-知识库
+
+- **dbs-knowledge** — 文件夹知识库（让 Agent 稳定查找、收录、调用和维护本地资料）
 
 ## 进阶-聊天室
 
@@ -161,7 +185,8 @@ Trae Solo 一个 zip 装一个 skill。本压缩包按使用场景分了几个�
 
 ## 进阶-Agent基建
 
-- **dbs-agent-migration** — Agent 工作台迁移（Claude Code / Codex / Grok 三端一致）
+- **dbs-agent-migration** — Agent 工作台迁移（Claude Code / Codex / Grok / 通用 Agents 多端一致）
+- **dbs-skill-cleaner** — 本地 skill 清理器（扫描广告导流、任务劫持与可疑外部调用；确认后隔离）
 
 ## 进阶-学习
 
